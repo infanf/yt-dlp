@@ -48,10 +48,10 @@ class ADNBaseIE(InfoExtractor):
 
 
 class ADNIE(ADNBaseIE):
-    _VALID_URL = r'https?://(?:www\.)?(?:animation|anime)digitalnetwork\.(com/)?(?P<lang>fr|de)/video/[^/?#]+/(?P<id>\d+)'
+    _VALID_URL = r'https?://(?:www\.)?(?:animation|anime)digitalnetwork\.com/video/[^/?#]+/(?P<id>\d+)'
     _TESTS = [{
-        'url': 'https://animationdigitalnetwork.com/fr/video/fruits-basket/9841-episode-1-a-ce-soir',
-        'md5': '1c9ef066ceb302c86f80c2b371615261',
+        'url': 'https://animationdigitalnetwork.com/video/fruits-basket/9841-episode-1',
+        'md5': '1f3d1139453194d699bb752c612feb0a',
         'info_dict': {
             'id': '9841',
             'ext': 'mp4',
@@ -70,10 +70,10 @@ class ADNIE(ADNBaseIE):
         },
         'skip': 'Only available in French and German speaking Europe',
     }, {
-        'url': 'http://animedigitalnetwork.com/fr/video/blue-exorcist-kyoto-saga/7778-episode-1-debut-des-hostilites',
+        'url': 'http://animedigitalnetwork.com/video/blue-exorcist-kyoto-saga/7778-episode-1-debut-des-hostilites',
         'only_matching': True,
     }, {
-        'url': 'https://animationdigitalnetwork.com/de/video/the-eminence-in-shadow/23550-folge-1',
+        'url': 'https://animationdigitalnetwork.com/video/the-eminence-in-shadow/23550-episode-1',
         'md5': '5c5651bf5791fa6fcd7906012b9d94e8',
         'info_dict': {
             'id': '23550',
@@ -176,7 +176,7 @@ Format: Marked,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text'''
             self.report_warning(message or self._LOGIN_ERR_MESSAGE)
 
     def _real_extract(self, url):
-        lang, video_id = self._match_valid_url(url).group('lang', 'id')
+        video_id = self._match_valid_url(url).group('id')
         video_base_url = self._PLAYER_BASE_URL + f'video/{video_id}/'
         player = self._download_json(
             video_base_url + 'configuration', video_id,
@@ -217,7 +217,6 @@ Format: Marked,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text'''
                 links_data = self._download_json(
                     links_url, video_id, 'Downloading links JSON metadata', headers={
                         'X-Player-Token': authorization,
-                        'X-Target-Distribution': lang,
                         **self._HEADERS,
                     }, query={
                         'freeWithAds': 'true',
@@ -298,9 +297,9 @@ Format: Marked,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text'''
 
 
 class ADNSeasonIE(ADNBaseIE):
-    _VALID_URL = r'https?://(?:www\.)?(?:animation|anime)digitalnetwork\.(com/)?(?P<lang>fr|de)/video/(?P<id>[^/?#]+)/?(?:$|[#?])'
+    _VALID_URL = r'https?://(?:www\.)?(?:animation|anime)digitalnetwork\.com/video/(?P<id>[^/?#]+)/?(?:$|[#?])'
     _TESTS = [{
-        'url': 'https://animationdigitalnetwork.com/fr/video/tokyo-mew-mew-new',
+        'url': 'https://animationdigitalnetwork.com/video/tokyo-mew-mew-new',
         'playlist_count': 12,
         'info_dict': {
             'id': '911',
@@ -310,7 +309,7 @@ class ADNSeasonIE(ADNBaseIE):
     }]
 
     def _real_extract(self, url):
-        lang, video_show_slug = self._match_valid_url(url).group('lang', 'id')
+        video_show_slug = self._match_valid_url(url).group('id')
         show = self._download_json(
             f'{self._API_BASE_URL}show/{video_show_slug}/', video_show_slug,
             'Downloading show JSON metadata', headers=self._HEADERS)['show']
@@ -318,7 +317,6 @@ class ADNSeasonIE(ADNBaseIE):
         episodes = self._download_json(
             f'{self._API_BASE_URL}video/show/{show_id}', video_show_slug,
             'Downloading episode list', headers={
-                'X-Target-Distribution': lang,
                 **self._HEADERS,
             }, query={
                 'order': 'asc',
@@ -328,7 +326,7 @@ class ADNSeasonIE(ADNBaseIE):
         def entries():
             for episode_id in traverse_obj(episodes, ('videos', ..., 'id', {str_or_none})):
                 yield self.url_result(
-                    f'https://animationdigitalnetwork.com/{lang}/video/{video_show_slug}/{episode_id}',
+                    f'https://animationdigitalnetwork.com/video/{video_show_slug}/{episode_id}',
                     ADNIE, episode_id)
 
         return self.playlist_result(entries(), show_id, show.get('title'))
